@@ -13,17 +13,17 @@ import java.util.concurrent.*;
 import javax.swing.SwingUtilities;
 
 public class GameLogic {
-    private long startTime; // متغير لحفظ وقت بدء اللعبة
+    private long startTime; 
 
     private static final int MAX_SCORE = 10;
-    private static final int GAME_DURATION_SECONDS = 120; // دقيقتان (120 ثانية)
-    private static final int ROUND_DELAY_SECONDS = 5; // وقت الانتظار بين كل جولة
+    private static final int GAME_DURATION_SECONDS = 120; 
+    private static final int ROUND_DELAY_SECONDS = 5; 
 
     private List<PlayerHandler> players;
     private Map<String, Integer> scores = new HashMap<>();
     private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private boolean gameRunning = false;
-    private boolean responseReceived = false; // لتحديد ما إذا تم استقبال رد صحيح من أحد اللاعبين
+    private boolean responseReceived = false; 
 
     public GameLogic(List<PlayerHandler> players) {
         this.players = players;
@@ -32,7 +32,7 @@ public class GameLogic {
         }
     }
 public void startGame() {
-    startTime = System.currentTimeMillis(); // ضبط وقت البدء
+    startTime = System.currentTimeMillis(); 
     gameRunning = true;
     broadcastToAllPlayers("GAME_START");
     broadcastScores();
@@ -95,24 +95,24 @@ private void startTimer() {
     private void updateScore(String playerName) {
         int newScore = scores.get(playerName) + 1;
         scores.put(playerName, newScore);
-        broadcastScores(); // بث تحديث السكور لجميع اللاعبين
+        broadcastScores(); 
         broadcastToAllPlayers("SCORE_UPDATE:" + playerName + ":" + newScore);
         System.out.println("Score updated for " + playerName + ": " + newScore);
 
         if (newScore >= MAX_SCORE) {
-            endGameWithWinner(playerName); // إنهاء اللعبة إذا وصل لاعب إلى الحد الأقصى من النقاط
+            endGameWithWinner(playerName); 
         }
     }
 
-    private void endGameWithWinner(String winner) {
+    public  void endGameWithWinner(String winner) {
         gameRunning = false;
         scheduler.shutdownNow();
         String winnerMessage = "GAME_OVER: Winner is " + winner;
-        broadcastToAllPlayers(winnerMessage); // بث الرسالة لكل اللاعبين
+        broadcastToAllPlayers(winnerMessage); 
         System.out.println("Game ended. Winner: " + winner);
     }
 
-    private void endGameWithoutWinner() {
+    public void endGameWithoutWinner() {
         gameRunning = false;
         scheduler.shutdownNow();
         String noWinnerMessage = "GAME_OVER: No winner. Time is up!";
@@ -120,18 +120,19 @@ private void startTimer() {
         System.out.println("Game ended. No winner.");
     }
 
-    private void broadcastScores() {
-        StringBuilder scoreMessage = new StringBuilder("SCORES:");
-        for (Map.Entry<String, Integer> entry : scores.entrySet()) {
-            scoreMessage.append(entry.getKey()).append("=").append(entry.getValue()).append(",");
-        }
-        broadcastToAllPlayers(scoreMessage.toString());
+    public  void broadcastScores() {
+    StringBuilder scoreMessage = new StringBuilder("SCORES:");
+    for (Map.Entry<String, Integer> entry : scores.entrySet()) {
+        scoreMessage.append(entry.getKey()).append("=").append(entry.getValue()).append(","); // صيغة الاسم=النقاط
     }
+    broadcastToAllPlayers(scoreMessage.toString());
+}
 
     private char currentLetter; // تعريف currentLetter في GameLogic
 
     public void processPlayerResponse(PlayerHandler player, String response) {
         if (!gameRunning) return; // تأكد أن اللعبة ما زالت مستمرة
+          
 
         if (response.equalsIgnoreCase(String.valueOf(currentLetter))) {
             responseReceived = true; // تم استقبال الرد الصحيح لهذه الجولة
@@ -156,6 +157,34 @@ private void startTimer() {
             player.sendMessage(message);
         }
     }
+   public synchronized void removePlayer(PlayerHandler player) {
+   
+    players.remove(player);
+ if (gameRunning) {
+        broadcastScores(); // بث النقاط فقط إذا كانت اللعبة نشطة
+    }
+     scores.remove(player.getPlayerName()); // إزالة اللاعب من النقاط
+    
+    broadcastToAllPlayers(player.getPlayerName() + " has left the game.");
+
+    // استمر في اللعبة إذا كان هناك أكثر من لاعب
+    if (players.size() > 1) {
+        broadcastScores(); // تحديث النقاط
+    } else if (players.size() == 1) {
+        PlayerHandler lastPlayer = players.get(0);
+        broadcastToAllPlayers("GAME_OVER: Only one player remains. " + lastPlayer.getPlayerName() + " wins!");
+        endGameWithWinner(lastPlayer.getPlayerName());
+    } else {
+        broadcastToAllPlayers("GAME_OVER: All players have left. Game is over.");
+        gameRunning = false;
+        scheduler.shutdownNow();
+    }
+}
+
+
+
+
+
    
 
 }

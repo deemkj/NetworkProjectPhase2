@@ -19,6 +19,8 @@ public class PlayerHandler implements Runnable {
     private BufferedReader in; // (player to server)
     private Room room;
     private String playerName;
+    private boolean disconnected = false;
+
 
     public PlayerHandler(Socket socket, Room room) {
         this.socket = socket;
@@ -45,31 +47,49 @@ public String receiveMessage() throws IOException {
     return in.readLine();
 }
 
-   @Override
+  @Override
 public void run() {
     try {
         String message;
         while ((message = in.readLine()) != null) {
-            if (message.equals("ENTER_WAITING_ROOM")) {
+              if (message.equalsIgnoreCase("LEAVE_GAME")) {
+                disconnected = true;
+                room.removePlayerFromGame(this); // Handle game player removal
+                break;
+            } else if (message.equals("ENTER_WAITING_ROOM")) {
                 boolean added = room.tryAddToWaitingRoom(this);
                 if (!added) {
                     sendMessage("ROOM_FULL");
                 }
             } else if (message.startsWith("PLAYER_RESPONSE:")) {
-                // تمرير الرد إلى الغرفة لمعالجته من قبل GameLogic
                 String response = message.replace("PLAYER_RESPONSE:", "").trim();
                 room.handlePlayerResponse(this, response);
+            }
+               else if (message.equals("REQUEST_SCORES_UPDATE")) {
+                // إرسال النقاط الحالية إلى جميع اللاعبين
+                room.broadcastScores();
             }
         }
     } catch (IOException e) {
         e.printStackTrace();
+    } finally {
+        try {
+            if (!disconnected) {
+                room.removePlayerFromGame(this);
+            }
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
 
-
-
-
-
-
-
 }
+
+
+
+
+
+
+
+

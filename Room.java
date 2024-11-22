@@ -8,7 +8,9 @@
  * @author deemkj
  */
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -21,6 +23,8 @@ class Room {
     private GameLogic gameLogic;
     private ScheduledExecutorService timerScheduler;
     private boolean timerStarted = false; // لتتبع ما إذا كان التايمر قد بدأ بالفعل
+    private Map<String, Integer> scores = new HashMap<>();
+
 
     public synchronized void addConnectedPlayer(PlayerHandler player) {
         mainRoomPlayers.add(player);
@@ -28,24 +32,23 @@ class Room {
     }
 
     public synchronized boolean tryAddToWaitingRoom(PlayerHandler player) {
-        if (waitingRoom.size() < MAX_Players) {
-            waitingRoom.add(player);
-            updateWaitingRoomPlayers();
+    if (waitingRoom.size() < MAX_Players) {
+        waitingRoom.add(player);
+        scores.put(player.getPlayerName(), 0); // إضافة اللاعب إلى خريطة النقاط مع نقطة ابتدائية 0
+        updateWaitingRoomPlayers();
 
-            if (waitingRoom.size() == MAX_Players && !gameStarted) {
-                // ابدأ اللعبة فورًا عند اكتمال عدد اللاعبين إلى 4
-                startGame();
-            } else if (waitingRoom.size() >= 2 && !gameStarted && !timerStarted) {
-                // ابدأ التايمر عند وجود لاعبين اثنين أو أكثر ولم تبدأ اللعبة بعد
-                startTimer();
-            }
-
-            return true;
-        } else {
-            player.sendMessage("ROOM_FULL");
-            return false;
+        if (waitingRoom.size() == MAX_Players && !gameStarted) {
+            startGame();
+        } else if (waitingRoom.size() >= 2 && !gameStarted && !timerStarted) {
+            startTimer();
         }
+
+        return true;
+    } else {
+        player.sendMessage("ROOM_FULL");
+        return false;
     }
+}
 
     private void startTimer() {
         timerScheduler = Executors.newScheduledThreadPool(1);
@@ -69,13 +72,14 @@ class Room {
     }
 
     private void startGame() {
-        gameStarted = true;
-        if (timerScheduler != null && !timerScheduler.isShutdown()) {
-            timerScheduler.shutdownNow(); // أوقف التايمر إذا كانت اللعبة ستبدأ
-        }
-        gameLogic = new GameLogic(new ArrayList<>(waitingRoom));
-        new Thread(gameLogic::startGame).start();
+    gameStarted = true;
+    if (timerScheduler != null && !timerScheduler.isShutdown()) {
+        timerScheduler.shutdownNow(); // أوقف التايمر إذا كانت اللعبة ستبدأ
     }
+    gameLogic = new GameLogic(new ArrayList<>(waitingRoom)); // فقط اللاعبين في غرفة الانتظار يدخلون اللعبة
+    broadcastToRoom(waitingRoom, "GAME_PLAYERS_UPDATE:" + getPlayersList(waitingRoom));
+    new Thread(gameLogic::startGame).start();
+}
 
     public void handlePlayerResponse(PlayerHandler player, String response) {
         if (gameLogic != null) {
@@ -92,6 +96,9 @@ class Room {
     }
 
     private void updateWaitingRoomPlayers() {
+         if (gameStarted) {
+        return; // إذا كانت اللعبة قد بدأت، لا تقم بتحديث غرفة الانتظار
+    }
         StringBuilder playerList = new StringBuilder("WAITING_ROOM: ");
         for (PlayerHandler player : waitingRoom) {
             playerList.append(player.getPlayerName()).append(",");
@@ -110,4 +117,82 @@ class Room {
             player.sendMessage(message);
         }
     }
+    ///////////////////////////
+  
+    
+    
+   public synchronized void removePlayerFromGame(PlayerHandler player) {
+      
+    
+    if (waitingRoom.contains(player)) {
+        waitingRoom.remove(player);
+        scores.remove(player.getPlayerName()); // حذف اللاعب من خريطة النقاط
+          broadcastScores();
+          gameLogic.broadcastScores(); 
+        updateWaitingRoomPlayers();
+    }
+
+    if (mainRoomPlayers.contains(player)) {
+        mainRoomPlayers.remove(player);
+        updateAllConnectedPlayers();
+    }
+
+    if (gameLogic != null) {
+        gameLogic.removePlayer(player);
+                //gameLogic.broadcastScores(); // استدعاء broadcastScores من GameLogic
+                //broadcastScores();
+
+    }
+
+    System.out.println("Player " + player.getPlayerName() + " left the game.");
+    System.out.println("Remaining players in waiting room: " + waitingRoom.size());
+    System.out.println("Remaining players in main room: " + mainRoomPlayers.size());
+
+
+    broadcastToAllPlayers("PLAYER_LEFT:" + player.getPlayerName());
+    broadcastToRoom(waitingRoom, "GAME_PLAYERS_UPDATE:" + getPlayersList(waitingRoom));
+
+    if (waitingRoom.size() == 1 && gameStarted) {
+        PlayerHandler lastPlayer = waitingRoom.get(0);
+        broadcastToAllPlayers("GAME_OVER: Only one player remains. " + lastPlayer.getPlayerName() + " wins!");
+        gameLogic.endGameWithWinner(lastPlayer.getPlayerName());
+        waitingRoom.clear();
+        gameStarted = false;
+    } else if (waitingRoom.isEmpty() && gameStarted) {
+        broadcastToAllPlayers("GAME_OVER: All players have left. Game stopped.");
+        gameLogic.endGameWithoutWinner();
+        gameStarted = false;
+    }
+}
+
+private String getPlayersList(List<PlayerHandler> players) {
+    if (players.isEmpty()) {
+        return ""; // إذا كانت القائمة فارغة، إرجاع نص فارغ
+    }
+    
+    StringBuilder playerList = new StringBuilder();
+    for (PlayerHandler player : players) {
+        playerList.append(player.getPlayerName()).append(",");
+    }
+    
+    // إزالة الفاصلة الأخيرة
+    return playerList.substring(0, playerList.length() - 1);
+}
+public void broadcastScores() {
+    StringBuilder scoresMessage = new StringBuilder("SCORES:");
+    for (PlayerHandler player : waitingRoom) {
+        String playerName = player.getPlayerName();
+        int score = scores.getOrDefault(playerName, 0); // استخدم 0 كقيمة افتراضية إذا لم يكن اللاعب موجودًا
+        scoresMessage.append(playerName)
+                     .append("=")
+                     .append(score)
+                     .append(",");
+    }
+    broadcastToRoom(waitingRoom, scoresMessage.toString());
+}
+
+
+
+
+
 }

@@ -14,7 +14,7 @@ import java.net.Socket;
 
 public class Server {
     private static final int PORT = 1234;
-    private static final String IP = "172.20.10.5"; 
+    private static final String IP = "192.168.100.213"; 
     private Room room = new Room();
 
     public void start() {

@@ -32,7 +32,7 @@ public class GameGUI extends JFrame {
     private BufferedReader in;
     private Socket socket;
 
-    private static final String SERVER_IP = "192.168.100.213";
+    private static final String SERVER_IP = "192.168.100.227";
     private static final int SERVER_PORT = 1234;
 
     public GameGUI(String playerName) {
@@ -71,7 +71,7 @@ private JTextArea createPlayersArea() {
 
     // provide the path to the background image from your local device
     private void showMainRoom() {
-        JPanel mainRoomPanel = createBackgroundPanel("/Users/deemkj/Documents/Java 2/phase2/testt22/src/main/java/background.png");
+        JPanel mainRoomPanel = createBackgroundPanel("C:\\Users\\lamee\\OneDrive\\Documents\\GitHub\\NetworkProjectPhase2\\src\\main\\java\\StartPage.png");
         mainRoomPanel.setLayout(null);  // disable layout to adjust elements manually
 
         // create a Play (start) button
@@ -107,7 +107,7 @@ private JTextArea createPlayersArea() {
     setTitle("Waiting Room");
 
     // provide the path to the background image (WaitingRoom) from your local device
-    JPanel waitingRoomPanel = createBackgroundPanel("/Users/deemkj/Documents/Java 2/phase2/testt22/src/main/java/WaitingRoom.png");
+    JPanel waitingRoomPanel = createBackgroundPanel("C:\\Users\\lamee\\OneDrive\\Documents\\GitHub\\NetworkProjectPhase2\\src\\main\\java\\WaitingRoom.png");
     waitingRoomPanel.setLayout(null);
 
     // Set up the area to display players in the waiting room

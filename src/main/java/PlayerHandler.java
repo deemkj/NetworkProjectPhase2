@@ -68,7 +68,7 @@ public void run() {
                else if (message.equals("REQUEST_SCORES_UPDATE")) {
                 
                 room.broadcastScores();
-            }
+            }  ///
         }
     } catch (IOException e) {
         e.printStackTrace();

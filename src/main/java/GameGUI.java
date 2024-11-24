@@ -84,7 +84,7 @@ private JTextArea createPlayersArea() {
 
 
     JButton playButton = new JButton("");
-    playButton.setBounds(450, 500, 500, 200);  
+    playButton.setBounds(290, 300, 1000, 500);  
 
  
     playButton.setOpaque(false);

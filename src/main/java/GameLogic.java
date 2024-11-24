@@ -51,7 +51,7 @@ private void startTimer() {
                 broadcastToAllPlayers("TIMER:" + timeLeft);
             }
         }
-    }, 1, 1, TimeUnit.SECONDS); // تحديث كل ثانية
+    }, 1, 1, TimeUnit.SECONDS); 
 
     scheduler.schedule(() -> {
         if (gameRunning) {
@@ -64,8 +64,8 @@ private void startTimer() {
     private void nextRound() {
         if (!gameRunning) return;
 
-        responseReceived = false; // إعادة تعيين حالة الردود للجولة الجديدة
-        currentLetter = (char) ('A' + new Random().nextInt(26)); // تحديث الحرف الحالي
+        responseReceived = false; 
+        currentLetter = (char) ('A' + new Random().nextInt(26)); 
         broadcastToAllPlayers("NEW_LETTER:" + currentLetter);
         System.out.println("New letter: " + currentLetter);
 
@@ -80,9 +80,9 @@ private void startTimer() {
         for (PlayerHandler player : players) {
             new Thread(() -> {
                 try {
-                    String response = player.receiveMessage(); // Assuming receiveMessage() exists in PlayerHandler
+                    String response = player.receiveMessage(); 
                     if (gameRunning && !responseReceived && response.equalsIgnoreCase(String.valueOf(correctLetter))) {
-                        responseReceived = true; // تم استقبال الرد الصحيح
+                        responseReceived = true; 
                         updateScore(player.getPlayerName());
                     }
                 } catch (IOException e) {
@@ -116,32 +116,32 @@ private void startTimer() {
         gameRunning = false;
         scheduler.shutdownNow();
         String noWinnerMessage = "GAME_OVER: No winner. Time is up!";
-        broadcastToAllPlayers(noWinnerMessage); // بث الرسالة لكل اللاعبين
+        broadcastToAllPlayers(noWinnerMessage); 
         System.out.println("Game ended. No winner.");
     }
 
     public  void broadcastScores() {
     StringBuilder scoreMessage = new StringBuilder("SCORES:");
     for (Map.Entry<String, Integer> entry : scores.entrySet()) {
-        scoreMessage.append(entry.getKey()).append("=").append(entry.getValue()).append(","); // صيغة الاسم=النقاط
+        scoreMessage.append(entry.getKey()).append("=").append(entry.getValue()).append(","); 
     }
     broadcastToAllPlayers(scoreMessage.toString());
 }
 
-    private char currentLetter; // تعريف currentLetter في GameLogic
+    private char currentLetter; 
 
     public void processPlayerResponse(PlayerHandler player, String response) {
-        if (!gameRunning) return; // تأكد أن اللعبة ما زالت مستمرة
+        if (!gameRunning) return; 
           
 
         if (response.equalsIgnoreCase(String.valueOf(currentLetter))) {
-            responseReceived = true; // تم استقبال الرد الصحيح لهذه الجولة
+            responseReceived = true; 
             updateScore(player.getPlayerName());
-            broadcastScores(); // بث تحديث السكور بعد التحديث
+            broadcastScores(); 
 
             System.out.println("Correct input from: " + player.getPlayerName());
 
-            // لا تبدأ الجولة التالية مباشرة، انتظر فترة التأخير المحددة
+      
             scheduler.schedule(() -> {
                 if (gameRunning) {
                     nextRound();
@@ -161,15 +161,15 @@ private void startTimer() {
    
     players.remove(player);
  if (gameRunning) {
-        broadcastScores(); // بث النقاط فقط إذا كانت اللعبة نشطة
+        broadcastScores(); 
     }
-     scores.remove(player.getPlayerName()); // إزالة اللاعب من النقاط
+     scores.remove(player.getPlayerName()); 
     
     broadcastToAllPlayers(player.getPlayerName() + " has left the game.");
 
-    // استمر في اللعبة إذا كان هناك أكثر من لاعب
+
     if (players.size() > 1) {
-        broadcastScores(); // تحديث النقاط
+        broadcastScores(); 
     } else if (players.size() == 1) {
         PlayerHandler lastPlayer = players.get(0);
         broadcastToAllPlayers("GAME_OVER: Only one player remains. " + lastPlayer.getPlayerName() + " wins!");

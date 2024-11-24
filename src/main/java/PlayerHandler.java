@@ -66,7 +66,7 @@ public void run() {
                 room.handlePlayerResponse(this, response);
             }
                else if (message.equals("REQUEST_SCORES_UPDATE")) {
-                // إرسال النقاط الحالية إلى جميع اللاعبين
+                
                 room.broadcastScores();
             }
         }

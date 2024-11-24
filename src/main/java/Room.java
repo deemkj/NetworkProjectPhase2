@@ -22,7 +22,7 @@ class Room {
     private boolean gameStarted = false;
     private GameLogic gameLogic;
     private ScheduledExecutorService timerScheduler;
-    private boolean timerStarted = false; // لتتبع ما إذا كان التايمر قد بدأ بالفعل
+    private boolean timerStarted = false; 
     private Map<String, Integer> scores = new HashMap<>();
 
 
@@ -34,7 +34,7 @@ class Room {
     public synchronized boolean tryAddToWaitingRoom(PlayerHandler player) {
     if (waitingRoom.size() < MAX_Players) {
         waitingRoom.add(player);
-        scores.put(player.getPlayerName(), 0); // إضافة اللاعب إلى خريطة النقاط مع نقطة ابتدائية 0
+        scores.put(player.getPlayerName(), 0);
         updateWaitingRoomPlayers();
 
         if (waitingRoom.size() == MAX_Players && !gameStarted) {
@@ -74,9 +74,9 @@ class Room {
     private void startGame() {
     gameStarted = true;
     if (timerScheduler != null && !timerScheduler.isShutdown()) {
-        timerScheduler.shutdownNow(); // أوقف التايمر إذا كانت اللعبة ستبدأ
+        timerScheduler.shutdownNow(); 
     }
-    gameLogic = new GameLogic(new ArrayList<>(waitingRoom)); // فقط اللاعبين في غرفة الانتظار يدخلون اللعبة
+    gameLogic = new GameLogic(new ArrayList<>(waitingRoom)); 
     broadcastToRoom(waitingRoom, "GAME_PLAYERS_UPDATE:" + getPlayersList(waitingRoom));
     new Thread(gameLogic::startGame).start();
 }
@@ -97,7 +97,7 @@ class Room {
 
     private void updateWaitingRoomPlayers() {
          if (gameStarted) {
-        return; // إذا كانت اللعبة قد بدأت، لا تقم بتحديث غرفة الانتظار
+        return; 
     }
         StringBuilder playerList = new StringBuilder("WAITING_ROOM: ");
         for (PlayerHandler player : waitingRoom) {
@@ -126,7 +126,7 @@ class Room {
     
     if (waitingRoom.contains(player)) {
         waitingRoom.remove(player);
-        scores.remove(player.getPlayerName()); // حذف اللاعب من خريطة النقاط
+        scores.remove(player.getPlayerName()); 
           broadcastScores();
           gameLogic.broadcastScores(); 
         updateWaitingRoomPlayers();
@@ -139,9 +139,7 @@ class Room {
 
     if (gameLogic != null) {
         gameLogic.removePlayer(player);
-                //gameLogic.broadcastScores(); // استدعاء broadcastScores من GameLogic
-                //broadcastScores();
-
+              
     }
 
     System.out.println("Player " + player.getPlayerName() + " left the game.");
@@ -167,7 +165,7 @@ class Room {
 
 private String getPlayersList(List<PlayerHandler> players) {
     if (players.isEmpty()) {
-        return ""; // إذا كانت القائمة فارغة، إرجاع نص فارغ
+        return ""; 
     }
     
     StringBuilder playerList = new StringBuilder();
@@ -175,14 +173,14 @@ private String getPlayersList(List<PlayerHandler> players) {
         playerList.append(player.getPlayerName()).append(",");
     }
     
-    // إزالة الفاصلة الأخيرة
+
     return playerList.substring(0, playerList.length() - 1);
 }
 public void broadcastScores() {
     StringBuilder scoresMessage = new StringBuilder("SCORES:");
     for (PlayerHandler player : waitingRoom) {
         String playerName = player.getPlayerName();
-        int score = scores.getOrDefault(playerName, 0); // استخدم 0 كقيمة افتراضية إذا لم يكن اللاعب موجودًا
+        int score = scores.getOrDefault(playerName, 0); 
         scoresMessage.append(playerName)
                      .append("=")
                      .append(score)

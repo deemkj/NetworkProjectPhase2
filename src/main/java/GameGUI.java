@@ -74,9 +74,14 @@ private JTextArea createPlayersArea() {
 
     // provide the path to the background image from your local device
     private void showMainRoom() {
+<<<<<<< HEAD
  
     Font pixelFontLarge = loadPixelFont(48f); 
     Font pixelFontMedium = loadPixelFont(30f); 
+=======
+        JPanel mainRoomPanel = createBackgroundPanel("C:\\Users\\lamee\\OneDrive\\Documents\\GitHub\\NetworkProjectPhase2\\src\\main\\java\\StartPage.png");
+        mainRoomPanel.setLayout(null);  // disable layout to adjust elements manually
+>>>>>>> ed78859dea7c38801b46f1f556c057f6eb6ab345
 
 
     JPanel mainRoomPanel = createBackgroundPanel("/Users/deemkj/Documents/GitHub/NetworkProjectPhase2/src/main/java/StartPage.png");
@@ -123,12 +128,17 @@ private JTextArea createPlayersArea() {
     private void enterWaitingRoom() {
     setTitle("Waiting Room");
 
+<<<<<<< HEAD
   
     Font pixelFontLarge = loadPixelFont(48f);
     Font pixelFontMedium = loadPixelFont(30f); 
 
 
     JPanel waitingRoomPanel = createBackgroundPanel("/Users/deemkj/Documents/GitHub/NetworkProjectPhase2/src/main/java/WaitingRoom.png");
+=======
+    // provide the path to the background image (WaitingRoom) from your local device
+    JPanel waitingRoomPanel = createBackgroundPanel("C:\\Users\\lamee\\OneDrive\\Documents\\GitHub\\NetworkProjectPhase2\\src\\main\\java\\WaitingRoom.png");
+>>>>>>> ed78859dea7c38801b46f1f556c057f6eb6ab345
     waitingRoomPanel.setLayout(null);
 
 
